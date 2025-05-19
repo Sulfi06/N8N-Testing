@@ -14,7 +14,7 @@ function App() {
   const [pollingInterval, setPollingInterval] = useState(null);
 
   // URLs for n8n webhooks - using the provided webhook URL
-  const N8N_SEND_WEBHOOK_URL = 'https://sulfi06.app.n8n.cloud/webhook-test/92e64812-3aab-478a-9c66-466f54d5cd2d';
+  const N8N_SEND_WEBHOOK_URL = 'https://sulfi06.app.n8n.cloud/webhook/transaction-upload';
   const N8N_RESULT_WEBHOOK_URL = 'http://localhost:5678/webhook/result';
 
   // Clean up polling interval on unmount
