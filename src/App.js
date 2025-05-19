@@ -10,21 +10,9 @@ function App() {
   const [insights, setInsights] = useState(null);
   const [rawData, setRawData] = useState(null);
   const [showDashboard, setShowDashboard] = useState(false);
-  const [webhookId, setWebhookId] = useState(null);
-  const [pollingInterval, setPollingInterval] = useState(null);
 
   // URLs for n8n webhooks - using the provided webhook URL
-  const N8N_SEND_WEBHOOK_URL = 'https://sulfi06.app.n8n.cloud/webhook/transaction-upload';
-  const N8N_RESULT_WEBHOOK_URL = 'http://localhost:5678/webhook/result';
-
-  // Clean up polling interval on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
+  const N8N_WEBHOOK_URL = 'https://sulfi06.app.n8n.cloud/webhook/transaction-upload';
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -77,7 +65,7 @@ function App() {
 
   const sendDataToN8n = async (data) => {
     try {
-      const response = await fetch(N8N_SEND_WEBHOOK_URL, {
+      const response = await fetch(N8N_WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,52 +81,13 @@ function App() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // For this webhook, we'll wait for a direct response rather than polling
+      // Process the response from n8n
       const result = await response.json();
       return result;
     } catch (error) {
       console.error('Error sending data to n8n:', error);
       throw error;
     }
-  };
-
-  const pollForResults = async (executionId) => {
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(`${N8N_RESULT_WEBHOOK_URL}?executionId=${executionId}`, {
-          method: 'GET',
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          
-          if (result.status === 'completed') {
-            clearInterval(interval);
-            setPollingInterval(null);
-            handleAnalysisResults(result);
-          }
-        }
-      } catch (error) {
-        console.error('Error polling for results:', error);
-      }
-    }, 3000); // Poll every 3 seconds
-
-    setPollingInterval(interval);
-  };
-
-  const handleAnalysisResults = (result) => {
-    if (!result.data) {
-      setError('No analysis results returned');
-      setLoading(false);
-      return;
-    }
-
-    const { insights, chartData } = result.data;
-    
-    setData(rawData);
-    setInsights(insights);
-    setShowDashboard(true);
-    setLoading(false);
   };
 
   const processData = async () => {
@@ -151,84 +100,26 @@ function App() {
     setError(null);
 
     try {
-      // Attempt to send data to n8n webhook
-      try {
-        const result = await sendDataToN8n(rawData);
+      // Send data to n8n webhook and wait for response
+      const result = await sendDataToN8n(rawData);
+      
+      // Verify the result has the expected data structure
+      if (result && result.data && result.data.insights) {
+        // Set the raw data for the table display
+        setData(rawData);
         
-        // If we got a result directly from the webhook
-        if (result && result.data) {
-          handleAnalysisResults(result);
-          return;
-        }
-      } catch (webhookError) {
-        console.error("Webhook error:", webhookError);
-        setError('Request could not be processed');
-        setLoading(false);
-        return;
+        // Set the insights from n8n for display
+        setInsights(result.data.insights);
+        
+        // Show the dashboard
+        setShowDashboard(true);
+      } else {
+        throw new Error('Invalid response from n8n');
       }
-      
-      // Fallback to local data processing if webhook fails
-      console.log("Using fallback local processing");
-      
-      // Calculate basic metrics
-      let totalIncome = 0;
-      let totalExpenses = 0;
-      let categoryMap = {};
-      
-      rawData.forEach(transaction => {
-        const amount = parseFloat(transaction.Amount || transaction.amount || 0);
-        const category = transaction.Category || transaction.category || 'Uncategorized';
-        
-        if (amount > 0) {
-          totalIncome += amount;
-        } else {
-          totalExpenses += Math.abs(amount);
-          
-          // Track expense categories
-          if (!categoryMap[category]) {
-            categoryMap[category] = 0;
-          }
-          categoryMap[category] += Math.abs(amount);
-        }
-      });
-      
-      // Find top expense category
-      let topExpenseCategory = 'None';
-      let maxAmount = 0;
-      Object.entries(categoryMap).forEach(([category, amount]) => {
-        if (amount > maxAmount) {
-          maxAmount = amount;
-          topExpenseCategory = category;
-        }
-      });
-      
-      const netCashFlow = totalIncome - totalExpenses;
-      const savingsRate = totalIncome > 0 ? Math.round((netCashFlow / totalIncome) * 100) : 0;
-      
-      // Set the data and insights
-      setData(rawData);
-      const localInsights = {
-        summary: "Based on your transaction data, your financial health appears to be in good standing with a positive cash flow. Your income exceeds your expenses, allowing for savings and potential investments.",
-        suggestions: [
-          `Consider allocating more to savings, as your current rate of ${savingsRate}% is healthy`,
-          `Review your spending in ${topExpenseCategory}, which is your highest expense category`,
-          "Create a budget for discretionary spending to maintain financial stability",
-          "Consider setting up automatic transfers to a dedicated emergency fund"
-        ],
-        metrics: {
-          totalIncome: totalIncome,
-          totalExpenses: totalExpenses,
-          netCashFlow: netCashFlow,
-          savingsRate: savingsRate,
-          topExpenseCategory: topExpenseCategory
-        }
-      };
-      
-      setInsights(localInsights);
-      setShowDashboard(true);
-      setLoading(false);
     } catch (err) {
-      setError('Error processing financial data: ' + err.message);
+      setError('Request could not be processed');
+      console.error('Error from n8n:', err);
+    } finally {
       setLoading(false);
     }
   };
@@ -239,12 +130,7 @@ function App() {
     setInsights(null);
     setError(null);
     setShowDashboard(false);
-    setWebhookId(null);
-    // Clear any polling
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      setPollingInterval(null);
-    }
+    
     // Reset file input
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) {
@@ -252,43 +138,21 @@ function App() {
     }
   };
 
-  // Generate chart data based on transactions
+  // Generate chart data based on the data returned from n8n
   const getIncomeExpenseData = () => {
-    if (!insights || !insights.metrics) return [];
-    
-    // If real data is available from insights, use it
-    if (insights.chartData && insights.chartData.monthlyTrends) {
-      return insights.chartData.monthlyTrends;
+    if (!insights || !insights.chartData || !insights.chartData.monthlyTrends) {
+      return [];
     }
     
-    // Otherwise use mock data
-    return [
-      { name: 'Jan', income: 4000, expenses: 2400 },
-      { name: 'Feb', income: 3000, expenses: 1398 },
-      { name: 'Mar', income: 2000, expenses: 9800 },
-      { name: 'Apr', income: 2780, expenses: 3908 },
-      { name: 'May', income: 1890, expenses: 4800 },
-      { name: 'Jun', income: 2390, expenses: 3800 },
-    ];
+    return insights.chartData.monthlyTrends;
   };
 
   const getCategoryData = () => {
-    if (!insights || !insights.metrics) return [];
-    
-    // If real data is available from insights, use it
-    if (insights.chartData && insights.chartData.expensesByCategory) {
-      return insights.chartData.expensesByCategory;
+    if (!insights || !insights.chartData || !insights.chartData.expensesByCategory) {
+      return [];
     }
     
-    // Otherwise use mock data
-    return [
-      { name: 'Housing', value: 35 },
-      { name: 'Food', value: 20 },
-      { name: 'Transportation', value: 15 },
-      { name: 'Utilities', value: 10 },
-      { name: 'Entertainment', value: 10 },
-      { name: 'Other', value: 10 },
-    ];
+    return insights.chartData.expensesByCategory;
   };
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
@@ -343,7 +207,7 @@ function App() {
         <div className="text-center py-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700 mx-auto"></div>
           <p className="mt-2 text-gray-600">
-            {webhookId ? 'Analyzing your financial data with AI...' : 'Processing your data...'}
+            {showDashboard ? 'Updating dashboard...' : 'Processing your data...'}
           </p>
         </div>
       )}
@@ -388,49 +252,51 @@ function App() {
           )}
 
           {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={getIncomeExpenseData()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="income" fill="#4F46E5" />
-                    <Bar dataKey="expenses" fill="#EF4444" />
-                  </BarChart>
-                </ResponsiveContainer>
+          {insights.chartData && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-4">Income vs. Expenses</h2>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={getIncomeExpenseData()}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="income" fill="#4F46E5" />
+                      <Bar dataKey="expenses" fill="#EF4444" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-            </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4">Expense Categories</h2>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={getCategoryData()}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={true}
-                      label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {getCategoryData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-4">Expense Categories</h2>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={getCategoryData()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={true}
+                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {getCategoryData().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-lg shadow">
