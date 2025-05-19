@@ -162,7 +162,9 @@ function App() {
         }
       } catch (webhookError) {
         console.error("Webhook error:", webhookError);
-        // We'll continue with the fallback instead of throwing an error to the UI
+        setError('Request could not be processed');
+        setLoading(false);
+        return;
       }
       
       // Fallback to local data processing if webhook fails
