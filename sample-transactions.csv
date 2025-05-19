@@ -1,0 +1,52 @@
+Date,Description,Amount,Category,Account
+2023-01-05,Salary Deposit,5000,Income,Checking
+2023-01-10,Rent Payment,-1500,Housing,Checking
+2023-01-12,Grocery Store,-120,Food,Credit Card
+2023-01-15,Electric Bill,-85,Utilities,Checking
+2023-01-18,Gas Station,-45,Transportation,Credit Card
+2023-01-20,Restaurant,-65,Dining,Credit Card
+2023-01-25,Internet Bill,-70,Utilities,Checking
+2023-01-28,Mobile Phone,-60,Utilities,Credit Card
+2023-02-05,Salary Deposit,5000,Income,Checking
+2023-02-07,Online Shopping,-110,Shopping,Credit Card
+2023-02-10,Rent Payment,-1500,Housing,Checking
+2023-02-12,Grocery Store,-135,Food,Credit Card
+2023-02-15,Electric Bill,-90,Utilities,Checking
+2023-02-18,Gas Station,-50,Transportation,Credit Card
+2023-02-22,Movie Theater,-30,Entertainment,Credit Card
+2023-02-25,Internet Bill,-70,Utilities,Checking
+2023-02-28,Mobile Phone,-60,Utilities,Credit Card
+2023-03-05,Salary Deposit,5000,Income,Checking
+2023-03-08,Medical Appointment,-150,Healthcare,Credit Card
+2023-03-10,Rent Payment,-1500,Housing,Checking
+2023-03-12,Grocery Store,-125,Food,Credit Card
+2023-03-15,Electric Bill,-80,Utilities,Checking
+2023-03-18,Gas Station,-55,Transportation,Credit Card
+2023-03-20,Restaurant,-80,Dining,Credit Card
+2023-03-25,Internet Bill,-70,Utilities,Checking
+2023-03-28,Mobile Phone,-60,Utilities,Credit Card
+2023-03-30,Gym Membership,-50,Health & Fitness,Credit Card
+2023-04-05,Salary Deposit,5500,Income,Checking
+2023-04-10,Rent Payment,-1500,Housing,Checking
+2023-04-12,Grocery Store,-140,Food,Credit Card
+2023-04-15,Electric Bill,-75,Utilities,Checking
+2023-04-18,Gas Station,-40,Transportation,Credit Card
+2023-04-20,Clothing Store,-120,Shopping,Credit Card
+2023-04-25,Internet Bill,-70,Utilities,Checking
+2023-04-28,Mobile Phone,-60,Utilities,Credit Card
+2023-05-05,Salary Deposit,5500,Income,Checking
+2023-05-10,Rent Payment,-1500,Housing,Checking
+2023-05-12,Grocery Store,-130,Food,Credit Card
+2023-05-15,Electric Bill,-70,Utilities,Checking
+2023-05-18,Gas Station,-45,Transportation,Credit Card
+2023-05-20,Restaurant,-95,Dining,Credit Card
+2023-05-25,Internet Bill,-70,Utilities,Checking
+2023-05-28,Mobile Phone,-60,Utilities,Credit Card
+2023-06-05,Salary Deposit,5500,Income,Checking
+2023-06-10,Rent Payment,-1500,Housing,Checking
+2023-06-12,Grocery Store,-145,Food,Credit Card
+2023-06-15,Electric Bill,-90,Utilities,Checking
+2023-06-18,Gas Station,-60,Transportation,Credit Card
+2023-06-22,Concert Tickets,-120,Entertainment,Credit Card
+2023-06-25,Internet Bill,-70,Utilities,Checking
+2023-06-28,Mobile Phone,-60,Utilities,Credit Card 

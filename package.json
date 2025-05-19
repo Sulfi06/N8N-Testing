@@ -1,0 +1,30 @@
+{
+  "name": "financial-dashboard",
+  "version": "1.0.0",
+  "description": "A modern financial dashboard application with AI-powered insights",
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html --no-source-maps"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.10.3",
+    "papaparse": "^5.4.1",
+    "xlsx": "^0.18.5",
+    "@babel/core": "^7.23.0",
+    "@babel/preset-react": "^7.22.15"
+  },
+  "devDependencies": {
+    "parcel": "^2.10.0",
+    "tailwindcss": "^3.3.5",
+    "postcss": "^8.4.31",
+    "autoprefixer": "^10.4.16",
+    "process": "^0.11.10"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "not dead",
+    "> 0.5%"
+  ]
+} 
